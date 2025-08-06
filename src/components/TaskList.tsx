@@ -10,15 +10,15 @@ interface TaskListProps {
 
 export default function TaskList({ filter = 'all' }: TaskListProps) {
   const { user, loading: authLoading } = useAuth();
-  const { tasks, loading, error, updateTask, deleteTask, refreshTasks } = useTasks();
-
-  // Filter tasks based on the prop and task status
-  const filteredTasks = tasks.filter(task => {
-    if (filter === 'all') return true;
-    if (filter === 'active') return task.status !== 'completed';
-    if (filter === 'completed') return task.status === 'completed';
-    return true;
-  });
+  const { 
+    filteredTasks, // Use filteredTasks from context which already handles both filters
+    loading, 
+    error, 
+    updateTask, 
+    deleteTask, 
+    refreshTasks,
+    categoryFilter // Get category filter from context
+  } = useTasks();
 
   // Don't render anything if auth is still loading
   if (authLoading) {
@@ -73,7 +73,18 @@ export default function TaskList({ filter = 'all' }: TaskListProps) {
     );
   }
 
+  // Show appropriate message when no tasks match filters
   if (filteredTasks.length === 0) {
+    let message = 'No tasks found';
+    if (categoryFilter) {
+      message = `No tasks in category "${categoryFilter}"`;
+      if (filter !== 'all') {
+        message += ` that are ${filter}`;
+      }
+    } else if (filter !== 'all') {
+      message = `No ${filter} tasks found`;
+    }
+
     return (
       <div className="text-center py-8">
         <div className="text-gray-500 dark:text-gray-400 mb-4">
@@ -82,9 +93,9 @@ export default function TaskList({ filter = 'all' }: TaskListProps) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-          No {filter === 'all' ? '' : filter.replace('_', ' ') + ' '}tasks found
+          {message}
         </h3>
-        <p className="text-gray-500 dark:text-gray-400">Try adjusting your search or filters.</p>
+        <p className="text-gray-500 dark:text-gray-400">Try adjusting your filters.</p>
       </div>
     );
   }
