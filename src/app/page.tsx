@@ -85,7 +85,7 @@ export default function HomePage() {
                 My Tasks
               </h1>
             </div>
-            <TaskList filter={currentFilter}/>
+            <TaskList />
           </div>
         </div>
       </main>

@@ -4,20 +4,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/contexts/TaskContext';
 import TaskItem from './TaskItem';
 
-interface TaskListProps {
-  filter?: 'all' | 'active' | 'completed';
-}
-
-export default function TaskList({ filter = 'all' }: TaskListProps) {
+// No need for filter prop since we're using context's filtering
+export default function TaskList() {
   const { user, loading: authLoading } = useAuth();
   const { 
-    filteredTasks, // Use filteredTasks from context which already handles both filters
+    filteredTasks, // Using pre-filtered tasks from context
     loading, 
     error, 
     updateTask, 
     deleteTask, 
     refreshTasks,
-    categoryFilter // Get category filter from context
+    currentFilter, // Get current filter from context
+    categoryFilter // Get current category from context
   } = useTasks();
 
   // Don't render anything if auth is still loading
@@ -73,16 +71,15 @@ export default function TaskList({ filter = 'all' }: TaskListProps) {
     );
   }
 
-  // Show appropriate message when no tasks match filters
   if (filteredTasks.length === 0) {
     let message = 'No tasks found';
     if (categoryFilter) {
       message = `No tasks in category "${categoryFilter}"`;
-      if (filter !== 'all') {
-        message += ` that are ${filter}`;
+      if (currentFilter !== 'all') {
+        message += ` that are ${currentFilter}`;
       }
-    } else if (filter !== 'all') {
-      message = `No ${filter} tasks found`;
+    } else if (currentFilter !== 'all') {
+      message = `No ${currentFilter} tasks found`;
     }
 
     return (
