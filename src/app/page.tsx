@@ -15,7 +15,7 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [currentFilter, setCurrentFilter] = useState('all');
+  const [currentFilter, setCurrentFilter] = useState<'all' | 'active' | 'completed'>('all');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -46,7 +46,6 @@ export default function HomePage() {
     return null; // Will redirect to login
   }
 
-  
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -74,7 +73,7 @@ export default function HomePage() {
           <div className="mb-6">
           <SearchFilter 
               currentFilter={currentFilter}
-              onFilterChange={setCurrentFilter}
+              onFilterChange={(filter) => setCurrentFilter(filter as 'all' | 'active' | 'completed')}
             />
 
           </div>
@@ -86,7 +85,7 @@ export default function HomePage() {
                 My Tasks
               </h1>
             </div>
-            <TaskList />
+            <TaskList filter={currentFilter}/>
           </div>
         </div>
       </main>

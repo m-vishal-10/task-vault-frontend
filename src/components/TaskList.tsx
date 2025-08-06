@@ -5,7 +5,7 @@ import { useTasks } from '@/contexts/TaskContext';
 import TaskItem from './TaskItem';
 
 interface TaskListProps {
-  filter?: 'all' | 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  filter?: 'all' | 'active' | 'completed';
 }
 
 export default function TaskList({ filter = 'all' }: TaskListProps) {
@@ -15,7 +15,9 @@ export default function TaskList({ filter = 'all' }: TaskListProps) {
   // Filter tasks based on the prop and task status
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
-    return task.status === filter;
+    if (filter === 'active') return task.status !== 'completed';
+    if (filter === 'completed') return task.status === 'completed';
+    return true;
   });
 
   // Don't render anything if auth is still loading
