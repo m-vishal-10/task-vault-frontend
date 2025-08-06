@@ -10,12 +10,13 @@ import Stats from '@/components/Stats';
 import QuickActions from '@/components/QuickActions';
 import SearchFilter from '@/components/SearchFilter';
 import Breadcrumb from '@/components/Breadcrumb';
+import { useTasks } from '@/contexts/TaskContext';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [currentFilter, setCurrentFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const { setFilter, currentFilter } = useTasks();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -63,18 +64,18 @@ export default function HomePage() {
           {/* Quick Actions */}
           <div className="mb-6">
           <QuickActions 
-              onAddTaskClick={handleAddTaskClick}
-              onViewAll={() => setCurrentFilter('all')}
-              onViewCompleted={() => setCurrentFilter('completed')}
-            />
+  onAddTaskClick={handleAddTaskClick}
+  onViewAll={() => setFilter('all')}
+  onViewCompleted={() => setFilter('completed')}
+/>
           </div>
           
           {/* Search Filter */}
           <div className="mb-6">
           <SearchFilter 
-              currentFilter={currentFilter}
-              onFilterChange={(filter) => setCurrentFilter(filter as 'all' | 'active' | 'completed')}
-            />
+  currentFilter={currentFilter}
+  onFilterChange={(filter) => setFilter(filter as 'all' | 'active' | 'completed')}
+/>
 
           </div>
           
