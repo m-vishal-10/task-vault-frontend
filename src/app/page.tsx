@@ -45,6 +45,16 @@ export default function HomePage() {
     return null; // Will redirect to login
   }
 
+  const [viewFilter, setViewFilter] = useState<'all' | 'completed'>('all');
+
+  const handleViewAll = () => {
+    setViewFilter('all');
+  };
+
+  const handleViewCompleted = () => {
+    setViewFilter('completed');
+  };
+
   return (
     <div className="min-h-screen bg-gray-950">
       <Header />
@@ -60,12 +70,15 @@ export default function HomePage() {
           
           {/* Quick Actions */}
           <div className="mb-6">
-            <QuickActions onAddTaskClick={handleAddTaskClick} />
+            <QuickActions onAddTaskClick={handleAddTaskClick} 
+            onViewAll={handleViewAll}
+            onViewCompleted={handleViewCompleted}/>
           </div>
           
           {/* Search Filter */}
           <div className="mb-6">
-            <SearchFilter />
+          <SearchFilter currentFilter={viewFilter} onFilterChange={setViewFilter} />
+
           </div>
           
           {/* Task List - now full width */}

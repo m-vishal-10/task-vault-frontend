@@ -4,15 +4,27 @@ import { useState, useEffect } from 'react';
 import { useTasks } from '@/contexts/TaskContext';
 import { useCategories } from '@/contexts/CategoryContext';
 
-export default function SearchFilter() {
+interface SearchFilterProps {
+  currentFilter?: string;
+  onFilterChange?: (filter: string) => void;
+}
+
+export default function SearchFilter({ 
+  currentFilter: propFilter, 
+  onFilterChange 
+}: SearchFilterProps = {}) {
   const { 
-    currentFilter, 
+    currentFilter: contextFilter, 
     searchQuery: contextSearchQuery, 
     categoryFilter,
-    setFilter, 
+    setFilter: contextSetFilter, 
     setSearch, 
     setCategoryFilter 
   } = useTasks();
+  
+  // Use prop filter if provided, otherwise use context filter
+  const currentFilter = propFilter !== undefined ? propFilter : contextFilter;
+  const setFilter = onFilterChange || contextSetFilter;
   
   const { categories } = useCategories();
   const [searchQuery, setSearchQuery] = useState(contextSearchQuery);
@@ -102,4 +114,4 @@ export default function SearchFilter() {
       </div>
     </div>
   );
-} 
+}
