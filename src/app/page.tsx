@@ -15,6 +15,7 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState('all');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,15 +46,7 @@ export default function HomePage() {
     return null; // Will redirect to login
   }
 
-  const [viewFilter, setViewFilter] = useState<'all' | 'completed'>('all');
-
-  const handleViewAll = () => {
-    setViewFilter('all');
-  };
-
-  const handleViewCompleted = () => {
-    setViewFilter('completed');
-  };
+  
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -70,14 +63,19 @@ export default function HomePage() {
           
           {/* Quick Actions */}
           <div className="mb-6">
-            <QuickActions onAddTaskClick={handleAddTaskClick} 
-            onViewAll={handleViewAll}
-            onViewCompleted={handleViewCompleted}/>
+          <QuickActions 
+              onAddTaskClick={handleAddTaskClick}
+              onViewAll={() => setCurrentFilter('all')}
+              onViewCompleted={() => setCurrentFilter('completed')}
+            />
           </div>
           
           {/* Search Filter */}
           <div className="mb-6">
-          <SearchFilter currentFilter={viewFilter} onFilterChange={setViewFilter} />
+          <SearchFilter 
+              currentFilter={currentFilter}
+              onFilterChange={setCurrentFilter}
+            />
 
           </div>
           

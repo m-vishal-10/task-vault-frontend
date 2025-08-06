@@ -4,9 +4,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/contexts/TaskContext';
 import TaskItem from './TaskItem';
 
-export default function TaskList() {
+interface TaskListProps {
+  filter?: 'all' | 'pending' | 'in_progress' | 'completed' | 'cancelled';
+}
+
+export default function TaskList({ filter = 'all' }: TaskListProps) {
   const { user, loading: authLoading } = useAuth();
-  const { filteredTasks, loading, error, updateTask, deleteTask, refreshTasks } = useTasks();
+  const { tasks, loading, error, updateTask, deleteTask, refreshTasks } = useTasks();
+
+  // Filter tasks based on the prop and task status
+  const filteredTasks = tasks.filter(task => {
+    if (filter === 'all') return true;
+    return task.status === filter;
+  });
 
   // Don't render anything if auth is still loading
   if (authLoading) {
@@ -69,7 +79,9 @@ export default function TaskList() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No tasks found</h3>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          No {filter === 'all' ? '' : filter.replace('_', ' ') + ' '}tasks found
+        </h3>
         <p className="text-gray-500 dark:text-gray-400">Try adjusting your search or filters.</p>
       </div>
     );
@@ -87,4 +99,4 @@ export default function TaskList() {
       ))}
     </div>
   );
-} 
+}
