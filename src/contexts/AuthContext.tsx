@@ -9,6 +9,8 @@ interface AuthContextType extends AuthState {
   signin: (email: string, password: string) => Promise<void>;
   signout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -154,6 +156,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      await apiService.forgotPassword(email);
+      setState(prev => ({ ...prev, loading: false, error: null }));
+    } catch (error) {
+      setState(prev => ({ ...prev, loading: false, error: error instanceof Error ? error.message : 'Failed to send reset email' }));
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string, token: string, newPassword: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      await apiService.resetPassword(email, token, newPassword);
+      setState(prev => ({ ...prev, loading: false, error: null }));
+    } catch (error) {
+      setState(prev => ({ ...prev, loading: false, error: error instanceof Error ? error.message : 'Failed to reset password' }));
+      throw error;
+    }
+  };
+
   // Check authentication status on mount
   useEffect(() => {
     refreshUser();
@@ -165,6 +189,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signin,
     signout,
     refreshUser,
+    forgotPassword,
+    resetPassword,
   };
 
   return (

@@ -115,6 +115,24 @@ class ApiService {
     return data;
   }
 
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return this.handleResponse<{ message: string }>(response);
+  }
+
+  async resetPassword(email: string, token: string, newPassword: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, token, newPassword }),
+    });
+    return this.handleResponse<{ message: string }>(response);
+  }
+
   // Task endpoints
   async getTasks(): Promise<{ tasks: Task[] }> {
     if (!this.isAuthenticated()) {

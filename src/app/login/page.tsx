@@ -118,6 +118,15 @@ export default function LoginPage() {
           </div>
 
           <div className="text-center">
+            {!isSignup && (
+              <button
+                type="button"
+                className="text-indigo-600 hover:text-indigo-500 text-sm mr-4"
+                onClick={() => router.push('/forgot-password')}
+              >
+                Forgot password?
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setIsSignup(!isSignup)}
