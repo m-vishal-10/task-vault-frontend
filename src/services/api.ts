@@ -124,11 +124,11 @@ class ApiService {
     return this.handleResponse<{ message: string }>(response);
   }
 
-  async resetPassword(email: string, token: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(accessToken: string, refreshToken: string, newPassword: string): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token, newPassword }),
+      body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken, new_password: newPassword }),
     });
     return this.handleResponse<{ message: string }>(response);
   }

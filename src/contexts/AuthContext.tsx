@@ -10,7 +10,7 @@ interface AuthContextType extends AuthState {
   signout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
+  resetPassword: (accessToken: string, refreshToken: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -167,10 +167,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const resetPassword = async (email: string, token: string, newPassword: string) => {
+  const resetPassword = async (accessToken: string, refreshToken: string, newPassword: string) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      await apiService.resetPassword(email, token, newPassword);
+      await apiService.resetPassword(accessToken, refreshToken, newPassword);
       setState(prev => ({ ...prev, loading: false, error: null }));
     } catch (error) {
       setState(prev => ({ ...prev, loading: false, error: error instanceof Error ? error.message : 'Failed to reset password' }));

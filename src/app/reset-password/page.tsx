@@ -15,18 +15,25 @@ function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { resetPassword } = useAuth();
-  const [email, setEmail] = useState("");
-  const [token, setToken] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const emailParam = searchParams.get("email") || "";
-    const tokenParam = searchParams.get("token") || "";
-    setEmail(emailParam);
-    setToken(tokenParam);
+    // Extract tokens from URL hash (Supabase auth callback)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessTokenParam = hashParams.get("access_token") || "";
+    const refreshTokenParam = hashParams.get("refresh_token") || "";
+    
+    // Also check search params as fallback
+    const accessTokenSearch = searchParams.get("access_token") || "";
+    const refreshTokenSearch = searchParams.get("refresh_token") || "";
+    
+    setAccessToken(accessTokenParam || accessTokenSearch);
+    setRefreshToken(refreshTokenParam || refreshTokenSearch);
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +42,7 @@ function ResetPasswordPage() {
     setSuccess("");
     setLoading(true);
     try {
-      await resetPassword(email, token, newPassword);
+      await resetPassword(accessToken, refreshToken, newPassword);
       setSuccess("Your password has been reset. You can now sign in.");
       setNewPassword("");
       setTimeout(() => router.push("/login"), 2000);
@@ -46,7 +53,7 @@ function ResetPasswordPage() {
     }
   };
 
-  const isTokenMissing = !email || !token;
+  const isTokenMissing = !accessToken;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
