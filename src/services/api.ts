@@ -1,7 +1,7 @@
 import { Category, Task, User } from "@/types";
 
-// api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 interface Session {
   access_token: string;
@@ -16,11 +16,17 @@ interface AuthResponse {
   requiresEmailConfirmation?: boolean;
 }
 
+export interface ResetPasswordResponse {
+  access_token: string;
+  refresh_token: string;
+  message?: string;
+}
+
 class ApiService {
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     return {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
@@ -28,65 +34,63 @@ class ApiService {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      
+
       if (response.status === 401) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
-        throw new Error('Authentication required. Please log in.');
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.href = "/login";
+        throw new Error("Authentication required. Please log in.");
       }
-      
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+
+      throw new Error(
+        errorData.error || `HTTP error! status: ${response.status}`
+      );
     }
     return response.json();
   }
 
-  // Authentication endpoints
+  // --- Auth ---
   async signup(email: string, password: string): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
     const data = await this.handleResponse<AuthResponse>(response);
-    
+
     if (data.session?.access_token) {
-      localStorage.setItem('access_token', data.session.access_token);
-      localStorage.setItem('refresh_token', data.session.refresh_token);
+      localStorage.setItem("access_token", data.session.access_token);
+      localStorage.setItem("refresh_token", data.session.refresh_token);
     }
-    
+
     return data;
   }
 
   async signin(email: string, password: string): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/signin`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
     const data = await this.handleResponse<AuthResponse>(response);
-    
+
     if (data.session?.access_token) {
-      localStorage.setItem('access_token', data.session.access_token);
-      localStorage.setItem('refresh_token', data.session.refresh_token);
+      localStorage.setItem("access_token", data.session.access_token);
+      localStorage.setItem("refresh_token", data.session.refresh_token);
     }
-    
+
     return data;
   }
 
   async signout(): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/auth/signout`, {
-      method: 'POST',
+      method: "POST",
       headers: this.getAuthHeaders(),
     });
-    
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    
+
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
     await this.handleResponse(response);
   }
 
@@ -99,46 +103,54 @@ class ApiService {
 
   async refreshSession(refreshToken: string): Promise<{ session: Session }> {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
     const data = await this.handleResponse<{ session: Session }>(response);
-    
+
     if (data.session?.access_token) {
-      localStorage.setItem('access_token', data.session.access_token);
-      localStorage.setItem('refresh_token', data.session.refresh_token);
+      localStorage.setItem("access_token", data.session.access_token);
+      localStorage.setItem("refresh_token", data.session.refresh_token);
     }
-    
+
     return data;
   }
 
   async forgotPassword(email: string): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
     return this.handleResponse<{ message: string }>(response);
   }
 
-  async resetPassword(accessToken: string, refreshToken: string, newPassword: string): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken, new_password: newPassword }),
+  async resetPassword(
+    accessToken: string,
+    refreshToken: string,
+    newPassword: string
+  ): Promise<ResetPasswordResponse> {
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+        password: newPassword,
+      }),
     });
-    return this.handleResponse<{ message: string }>(response);
+
+    return this.handleResponse<ResetPasswordResponse>(res);
   }
 
-  // Task endpoints
+  // --- Tasks ---
   async getTasks(): Promise<{ tasks: Task[] }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks`, {
       headers: this.getAuthHeaders(),
     });
@@ -147,9 +159,8 @@ class ApiService {
 
   async getTask(id: string): Promise<{ task: Task }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
       headers: this.getAuthHeaders(),
     });
@@ -165,11 +176,10 @@ class ApiService {
     category?: string;
   }): Promise<{ task: Task }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks`, {
-      method: 'POST',
+      method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
@@ -177,7 +187,7 @@ class ApiService {
   }
 
   async updateTask(
-    id: string, 
+    id: string,
     taskData: Partial<{
       title: string;
       description: string;
@@ -188,11 +198,10 @@ class ApiService {
     }>
   ): Promise<{ task: Task }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
@@ -201,11 +210,10 @@ class ApiService {
 
   async deleteTask(id: string): Promise<void> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: this.getAuthHeaders(),
     });
     await this.handleResponse(response);
@@ -213,9 +221,8 @@ class ApiService {
 
   async getTasksByStatus(status: string): Promise<{ tasks: Task[] }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks/status/${status}`, {
       headers: this.getAuthHeaders(),
     });
@@ -224,34 +231,33 @@ class ApiService {
 
   async getTasksByPriority(priority: string): Promise<{ tasks: Task[] }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/tasks/priority/${priority}`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse<{ tasks: Task[] }>(response);
   }
 
-  // Category endpoints
+  // --- Categories ---
   async getCategories(): Promise<{ categories: Category[] }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/categories`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse<{ categories: Category[] }>(response);
   }
 
-  async createCategory(categoryData: { name: string }): Promise<{ category: Category }> {
+  async createCategory(
+    categoryData: { name: string }
+  ): Promise<{ category: Category }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
     const response = await fetch(`${API_BASE_URL}/categories`, {
-      method: 'POST',
+      method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(categoryData),
     });
@@ -260,26 +266,26 @@ class ApiService {
 
   async getTasksByCategory(category: string): Promise<{ tasks: Task[] }> {
     if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please log in.');
+      throw new Error("Authentication required. Please log in.");
     }
-
-    const response = await fetch(`${API_BASE_URL}/tasks/category/${encodeURIComponent(category)}`, {
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/tasks/category/${encodeURIComponent(category)}`,
+      { headers: this.getAuthHeaders() }
+    );
     return this.handleResponse<{ tasks: Task[] }>(response);
   }
 
-  // Utility methods
+  // --- Utils ---
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('access_token');
+    return !!localStorage.getItem("access_token");
   }
 
   getAccessToken(): string | null {
-    return localStorage.getItem('access_token');
+    return localStorage.getItem("access_token");
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
+    return localStorage.getItem("refresh_token");
   }
 }
 
