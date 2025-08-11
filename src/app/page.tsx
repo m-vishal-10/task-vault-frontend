@@ -11,7 +11,7 @@ import QuickActions from '@/components/QuickActions';
 import SearchFilter from '@/components/SearchFilter';
 import Breadcrumb from '@/components/Breadcrumb';
 import { useTasks } from '@/contexts/TaskContext';
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/utils/supabaseClient";
 
 function PasswordRecoveryInline() {
   const [show, setShow] = useState(false);
@@ -20,7 +20,6 @@ function PasswordRecoveryInline() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
     if (typeof window !== "undefined") {

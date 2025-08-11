@@ -2,34 +2,34 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/utils/supabaseClient';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const [sessionReady, setSessionReady] = useState(false);
 
-  // Extract tokens from URL hash and set session
   useEffect(() => {
-    const hash = window.location.hash.substring(1); // remove '#'
+    // Grab the hash part of the URL
+    const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
-    console.log(window.location.hash);
 
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
-    console.log(params.get('access_token'), params.get('refresh_token'));
+
+    console.log('Hash:', window.location.hash);
+    console.log('Access Token:', accessToken);
+    console.log('Refresh Token:', refreshToken);
 
     if (!accessToken || !refreshToken) {
       setError('Invalid or expired password reset link.');
       return;
     }
 
-    // Set the auth session in Supabase so updateUser works
+    // Set the session for Supabase
     supabase.auth
       .setSession({
         access_token: accessToken,
@@ -37,15 +37,15 @@ export default function ResetPasswordPage() {
       })
       .then((res) => {
         console.log('setSession response:', res);
-
         if (res.error) {
           setError(res.error.message);
         } else {
           setSessionReady(true);
         }
       });
-      supabase.auth.getSession().then(console.log);
 
+    // Log the current session for debugging
+    supabase.auth.getSession().then(console.log);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +55,6 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Update password using supabase
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
@@ -66,7 +65,7 @@ export default function ResetPasswordPage() {
           router.push('/login');
         }, 2000);
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong while resetting password.');
     } finally {
       setLoading(false);
