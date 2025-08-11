@@ -18,9 +18,11 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const hash = window.location.hash.substring(1); // remove '#'
     const params = new URLSearchParams(hash);
+    console.log(window.location.hash);
 
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
+    console.log(params.get('access_token'), params.get('refresh_token'));
 
     if (!accessToken || !refreshToken) {
       setError('Invalid or expired password reset link.');
@@ -33,13 +35,17 @@ export default function ResetPasswordPage() {
         access_token: accessToken,
         refresh_token: refreshToken,
       })
-      .then(({ error }) => {
-        if (error) {
-          setError(error.message);
+      .then((res) => {
+        console.log('setSession response:', res);
+
+        if (res.error) {
+          setError(res.error.message);
         } else {
           setSessionReady(true);
         }
       });
+      supabase.auth.getSession().then(console.log);
+
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
