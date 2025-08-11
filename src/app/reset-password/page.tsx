@@ -2,32 +2,44 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiService } from '@/services/api';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [accessToken, setAccessToken] = useState('');
-  const [refreshToken, setRefreshToken] = useState('');
+  const supabase = createClientComponentClient();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Extract tokens from URL hash
+  const [sessionReady, setSessionReady] = useState(false);
+
+  // Extract tokens from URL hash and set session
   useEffect(() => {
     const hash = window.location.hash.substring(1); // remove '#'
     const params = new URLSearchParams(hash);
 
-    const at = params.get('access_token') || '';
-    const rt = params.get('refresh_token') || '';
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
 
-    if (!at || !rt) {
+    if (!accessToken || !refreshToken) {
       setError('Invalid or expired password reset link.');
       return;
     }
 
-    setAccessToken(at);
-    setRefreshToken(rt);
+    // Set the auth session in Supabase so updateUser works
+    supabase.auth
+      .setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      })
+      .then(({ error }) => {
+        if (error) {
+          setError(error.message);
+        } else {
+          setSessionReady(true);
+        }
+      });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,21 +49,19 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Call backend reset password
-      await apiService.resetPassword(accessToken, refreshToken, password);
+      // Update password using supabase
+      const { error } = await supabase.auth.updateUser({ password });
 
-      setSuccess('✅ Password updated successfully! Please log in with your new password.');
-
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      if (error) {
+        setError(error.message);
       } else {
-        setError('Something went wrong while resetting password.');
+        setSuccess('✅ Password updated successfully! Please log in with your new password.');
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
       }
+    } catch (err) {
+      setError('Something went wrong while resetting password.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +72,7 @@ export default function ResetPasswordPage() {
       <h1>🔑 Reset Password</h1>
       {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
       {success && <p style={{ color: 'green', fontWeight: 'bold' }}>{success}</p>}
-      
+
       <form onSubmit={handleSubmit}>
         <input
           type="password"
@@ -78,18 +88,19 @@ export default function ResetPasswordPage() {
             borderRadius: '5px',
             border: '1px solid #ccc',
           }}
+          disabled={!sessionReady || loading}
         />
         <button
           type="submit"
-          disabled={loading || !accessToken || !refreshToken}
+          disabled={loading || !sessionReady}
           style={{
             width: '100%',
             padding: '10px',
             fontSize: '16px',
             borderRadius: '5px',
-            backgroundColor: loading ? '#ccc' : '#0070f3',
+            backgroundColor: loading || !sessionReady ? '#ccc' : '#0070f3',
             color: '#fff',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading || !sessionReady ? 'not-allowed' : 'pointer',
             border: 'none',
           }}
         >
